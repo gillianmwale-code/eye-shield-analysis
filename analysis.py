@@ -1,45 +1,68 @@
 # Eye Shield Data Analysis
-# This script analyses how effective different materials are at blocking light
+# Investigating effectiveness of different materials in reducing light exposure
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load the dataset
+# Load dataset
 file_name = "eye_shield_experiment_data.xlsx"
-df = pd.read_excel(file_name)
+raw_data = pd.read_excel(file_name, header=None)
 
-# Show first few rows
-print("Preview of dataset:")
-print(df.head())
+# Display first few rows (for understanding structure)
+print("Raw data preview:")
+print(raw_data.head())
 
-# Because your file is structured manually, we will reshape it
-# We will define column names clearly
+# -----------------------------
+# Clean and restructure dataset
+# -----------------------------
 
-df.columns = ["Material", "ID", "35cm", "25cm", "15cm", "10cm"]
+# Rename columns manually based on your dataset structure
+data = raw_data.copy()
 
-# Remove rows that are not actual measurements
-df = df.dropna()
+data.columns = ["Material", "ID", "35cm", "25cm", "15cm", "10cm"]
 
-# Convert numerical columns to numbers
+# Remove rows that don't have IDs (these are headers or labels)
+data = data[data["ID"].notna()]
+
+# Convert distance columns to numeric
 for col in ["35cm", "25cm", "15cm", "10cm"]:
-    df[col] = pd.to_numeric(df[col], errors='coerce')
+    data[col] = pd.to_numeric(data[col], errors='coerce')
 
-# Drop rows with missing values again after conversion
-df = df.dropna()
+# Drop rows with missing values
+data = data.dropna()
 
-# Calculate average light for each material
-mean_values = df.groupby("Material")[["35cm", "25cm", "15cm", "10cm"]].mean()
+# -----------------------------
+# Analysis
+# -----------------------------
+
+# Calculate mean light exposure per material
+mean_values = data.groupby("Material")[["35cm", "25cm", "15cm", "10cm"]].mean()
 
 print("\nAverage light exposure by material:")
 print(mean_values)
 
-# Plot average light at 10cm (most intense exposure)
+# -----------------------------
+# Visualisation
+# -----------------------------
+
+# Plot 1: Light exposure at closest distance (10cm)
 mean_values["10cm"].plot(kind="bar")
 
-plt.title("Average Light Exposure at 10cm by Material")
+plt.title("Light Exposure at 10cm by Material")
 plt.xlabel("Material")
-plt.ylabel("Light Radiance (uW/cm2/nm)")
+plt.ylabel("Light Radiance (uW/cm²/nm)")
 plt.xticks(rotation=45)
+
+plt.tight_layout()
+plt.show()
+
+# Plot 2: Trend across distances
+mean_values.T.plot()
+
+plt.title("Light Exposure Across Distances")
+plt.xlabel("Distance")
+plt.ylabel("Light Radiance (uW/cm²/nm)")
+plt.legend(title="Material")
 
 plt.tight_layout()
 plt.show()
